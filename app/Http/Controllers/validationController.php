@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
 use Intervention\Image\Facades\Image;
+use Illuminate\Http\Request;
 
 class validationController extends Controller
 {

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\validationController;
+use App\Http\Controllers\glareController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +21,8 @@ use App\Http\Controllers\validationController;
 
 Route::get('/', [validationController::class, 'showForm']);
 Route::post('/upload', [validationController::class, 'uploadImage'])->name('upload');
+Route::get('/facerecog', [validationController::class, 'facerecog']);
+Route::get('/check', [glareController::class, 'glare']);
+Route::post('/check-glare', [glareController::class, 'checkGlare'])->name('check-glare');
+Route::get('/eye-result', [glareController::class, 'eyedetection'])->name('eye-result');
+//Route::post('/check-glare', [gladeController::class, 'checkGlare']);
