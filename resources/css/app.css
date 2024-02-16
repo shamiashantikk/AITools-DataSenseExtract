@@ -201,3 +201,17 @@ p {
 .hidden {
     display: none !important;
 }
+
+.rect {
+    border: 2px solid #a64ceb;
+    position: absolute;
+}
+.face {
+    border: 2px solid #4caf50; /* Green border for face */
+}
+.eye {
+    border: 2px solid #2196f3; /* Blue border for eye */
+}
+.glare {
+    border: 2px solid #ff0000; /* Red border for glare */
+}

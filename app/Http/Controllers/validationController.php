@@ -8,10 +8,12 @@ class validationController extends Controller
 {
     public function showForm()
     {
-        return view('main_upload');
+        $isBlueBackground = false; // Set to the actual value
+        $isHuman = false; // Set to the actual value
+        return view('main_upload', compact('isBlueBackground', 'isHuman'));
     }
 
-    public function checkBackgroundColor($imagePath, $threshold = 150)
+    public function checkBackgroundColor($imagePath, $threshold = 200)
     {
         // Open an image file
         $img = Image::make($imagePath);
@@ -33,14 +35,20 @@ class validationController extends Controller
         return $isBlue;
     }
 
-    public function isBlueColor($color, $threshold = 150)
+    public function isBlueColor($color, $threshold = 200)
     {
-        // Check if the color is close to blue (adjust the RGB values as needed)
-        $blueThreshold = $threshold;
-        $isBlue = $color[0] < $blueThreshold && $color[1] < $blueThreshold && $color[2] > (255 - $blueThreshold);
+        // Extract individual RGB components
+        $red = $color[0];
+        $green = $color[1];
+        $blue = $color[2];
 
-        return $isBlue;
+        // Calculate the Euclidean distance from the color to the blue reference (0, 0, 255)
+        $distance = sqrt(pow($red, 2) + pow($green, 2) + pow(($blue - 255), 2));
+
+        // Check if the distance is below the threshold
+        return $distance < $threshold;
     }
+
     public function uploadImage(Request $request)
     {
         $request->validate([
@@ -50,20 +58,38 @@ class validationController extends Controller
         $image = $request->file('fileUpload');
         $imagePath = $image->path();
 
+        // Save the uploaded image temporarily
+        $path = $image->storeAs('temp', $image->getClientOriginalName());
+
         // Check background color before proceeding with upload
         $isBlueBackground = $this->checkBackgroundColor($imagePath);
+        $isHuman = $this->detectHuman($path);
 
-        if ($isBlueBackground == true ) {
-            // Continue with your existing upload logic
-            $imageName = uniqid() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('uploads'), $imageName);
+        // Combine all results into the response JSON
+        return response()->json([
+            'success' => true,
+            'isBlueBackground' => $isBlueBackground,
+            'isHuman' => $isHuman
+        ]);
+    }
 
-           // return "File uploaded successfully. File path: " . public_path('uploads/' . $imageName);
-           return response()->json(['success' => true, 'message' => 'File uploaded successfully']);
+    public function detectHuman($imagePath)
+    {
+        $command = "python " . base_path("face_detection_script.py") . " " . storage_path("app/$imagePath");
 
+        // Execute the command
+        exec($command, $output, $returnCode);
+
+        // Check if the command executed successfully
+        if ($returnCode === 0) {
+            // Extract the result from the output
+            $result = trim(implode("\n", $output));
+            // Convert the result to a boolean value
+            $isHuman = filter_var($result, FILTER_VALIDATE_BOOLEAN);
+
+            return $isHuman;
         } else {
-            //return "Image does not have a blue background. Please upload an image with a blue background.";
-            return response()->json(['success' => false, 'message' => 'Image does not have a blue background. Please upload an image with a blue background.']);
+            return false;
         }
     }
 }

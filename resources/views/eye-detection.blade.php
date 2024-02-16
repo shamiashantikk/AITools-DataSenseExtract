@@ -37,86 +37,81 @@
     </div>
     <div class="demo-frame">
         <div class="demo-container">
-            <img id="img" src="{{ asset('sample/bang.jpg') }}" />
+            <img id="img" src="{{ asset('sample/kelni.jpg') }}" />
         </div>
     </div>
     <script>
         window.onload = function() {
-    var img = document.getElementById('img');
-    var eyeDetected = false;
-    var eyeRects = [];
+            var img = document.getElementById('img');
 
-    var eyeTracker = new tracking.ObjectTracker('eye');
-    eyeTracker.setStepSize(0.9);
-    eyeTracker.setEdgesDensity(0.1);
+            //0.9, 1.0, 0.2 @ 1.0, 1.0, 0.2
+            var faceTracker = new tracking.ObjectTracker('face');
+            faceTracker.setStepSize(1.0);
+            faceTracker.setInitialScale(1.0);
+            faceTracker.setEdgesDensity(0.2);
 
-    tracking.track('#img', eyeTracker);
+            var eyeTracker = new tracking.ObjectTracker('eye');
+            eyeTracker.setStepSize(1.0);
+            eyeTracker.setInitialScale(1.0);
+            eyeTracker.setEdgesDensity(0.2);
 
-    img.onload = function() {
-        if (eyeDetected) {
-            var intensityThreshold = 200;
-            var redChannelThreshold = 200;
-            var brightnessThreshold = 100;
+            tracking.track('#img', faceTracker);
+            tracking.track('#img', eyeTracker);
 
-            eyeRects.forEach(function(eyeRect) {
-                console.log('Detected eye at:', eyeRect.x, eyeRect.y);
-                var glareDetected = detectGlare(img, eyeRect, intensityThreshold, redChannelThreshold, brightnessThreshold);
-                
-                if (glareDetected) {
-                    console.log('Glare detected in the eye region.');
-                } else {
-                    console.log('No glare detected in the eye region.');
-                }
-                //window.plot(eyeRect.x, eyeRect.y, eyeRect.width, eyeRect.height, 'eye');
+            var faceDetected = false; // Flag to track if a face is detected
+
+            faceTracker.on('track', function(event) {
+                if (event.data.length > 0) {
+                    // Face detected
+                    faceDetected = true;
+                    var faceRect = event.data[0];
+                    console.log('Detected face at:', faceRect.x, faceRect.y);
+                    window.plot(faceRect.x, faceRect.y, faceRect.width, faceRect.height, 'face');
+                } 
             });
-        }
-        };
 
-        eyeTracker.on('track', function(event) {
-            if (event.data.length > 0) {
-                eyeDetected = true;
-                eyeRects = event.data;
-                img.src = img.src; // Trigger the onload event
-            } else {
-                eyeDetected = false;
-            }
-        });
+            eyeTracker.on('track', function(event) {
+                event.data.forEach(function(eyeRect) {
+                    if (faceDetected) {
+                        // Draw eyes only if a face is detected
+                        console.log('Detected eye at:', eyeRect.x, eyeRect.y);
+                        window.plot(eyeRect.x, eyeRect.y, eyeRect.width, eyeRect.height, 'eye');
 
-            function detectGlare(img, eyeRect, intensityThreshold, redChannelThreshold, brightnessThreshold) {
-                // Create a canvas and draw the face region on it
-                var canvas = document.createElement('canvas');
-                canvas.width = eyeRect.width;
-                canvas.height = eyeRect.height;
-                var ctx = canvas.getContext('2d');
-                ctx.drawImage(img, eyeRect.x, eyeRect.y, eyeRect.width, eyeRect.height, 0, 0, eyeRect.width, eyeRect.height);
+                        // Check for glare in the eye region (example algorithm)
+                        var intensityThreshold = 100; // Adjust as needed
+                        var redChannelThreshold = 200; // Adjust as needed
+                        var brightnessThreshold = 200; // Adjust as needed
+                        var glareDetected = detectGlare(img, eyeRect, intensityThreshold, redChannelThreshold);
+                        if (glareDetected) {
+                            console.log('Glare detected in the eye region.');
+                            window.plot(eyeRect.x, eyeRect.y, eyeRect.width, eyeRect.height, 'glare');
+                        }else{
+                        console.log('No glare detected!');
+                        }
+                    }
+                });
+            });
 
-                // Get the pixel data of the face region
-                var imageData = ctx.getImageData(0, 0, eyeRect.width, eyeRect.height);
-                var data = imageData.data;
+            window.plot = function(x, y, w, h, type) {
+                var rect = document.createElement('div');
+                document.querySelector('.demo-container').appendChild(rect);
+                rect.classList.add('rect');
+                rect.classList.add(type);
+                rect.style.width = w + 'px';
+                rect.style.height = h + 'px';
+                rect.style.left = (img.offsetLeft + x) + 'px';
+                rect.style.top = (img.offsetTop + y) + 'px';
+            };
 
-                // Simple brightness check (adjust as needed)
-                var brightnessSum = 0;
-                for (var i = 0; i < data.length; i += 4) {
-                    var brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    brightnessSum += brightness;
-                }
-
-                var averageBrightness = brightnessSum / (data.length / 4);
-
-                // Compare average brightness to the threshold
-                return averageBrightness > brightnessThreshold;
-            }
-
-
-            function detectGlares(img, eyeRect, intensityThreshold, redChannelThreshold,brightnessThreshold ) {
-                var faceCanvas = document.createElement('canvas');
-                var faceContext = faceCanvas.getContext('2d');
-                faceCanvas.width = eyeRect.width;
-                faceCanvas.height = eyeRect.height;
-                faceContext.drawImage(img, eyeRect.x, eyeRect.y, eyeRect.width, eyeRect.height, 0, 0, eyeRect.width, eyeRect.height);
+            function detectGlare(img, eyeRect, intensityThreshold, redChannelThreshold,brightnessThreshold ) {
+                var eyeCanvas = document.createElement('canvas');
+                var eyeContext = eyeCanvas.getContext('2d');
+                eyeCanvas.width = eyeRect.width;
+                eyeCanvas.height = eyeRect.height;
+                eyeContext.drawImage(img, eyeRect.x, eyeRect.y, eyeRect.width, eyeRect.height, 0, 0, eyeRect.width, eyeRect.height);
 
                 // Get pixel data from the face region
-                var imageData = faceContext.getImageData(0, 0, eyeRect.width, eyeRect.height);
+                var imageData = eyeContext.getImageData(0, 0, eyeRect.width, eyeRect.height);
                 var data = imageData.data;
 
                 // Check each pixel for high intensity in the red channel
@@ -138,87 +133,8 @@
                         }
                     }
                 }
-                return false; // no glare detected
-            }
-
-            function cropImage(image, rect) {
-                var canvas = document.createElement('canvas');
-                var ctx = canvas.getContext('2d');
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-                ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
-                var croppedImage = new Image();
-                croppedImage.src = canvas.toDataURL();
-                return croppedImage;
-            }
-
-            //step 1: convert image to grayscale
-            function convertToGrayscale(img) {
-                var canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                var ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, img.width, img.height);
-
-                // Get the image data
-                var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-                // Convert the image data to grayscale
-                var data = imageData.data;
-                for (var i = 0; i < data.length; i += 4) {
-                    var grayscale = 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2];
-                    data[i] = grayscale;
-                    data[i + 1] = grayscale;
-                    data[i + 2] = grayscale;
-                }
-
-                ctx.putImageData(imageData, 0, 0);
-                return canvas;
-            }
-
-            //step2: threshold kan image
-            function thresholdImage(image, threshold) {
-                var canvas = document.createElement('canvas');
-                var ctx = canvas.getContext('2d');
-                canvas.width = image.width;
-                canvas.height = image.height;
-                ctx.drawImage(image, 0, 0, image.width, image.height);
-                var imageData = ctx.getImageData(0, 0, image.width, image.height);
-                
-                for (var i = 0; i < imageData.data.length; i += 4) {
-                    var average = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-                    var binaryValue = average > threshold ? 255 : 0;
-                    imageData.data[i] = binaryValue;
-                    imageData.data[i + 1] = binaryValue;
-                    imageData.data[i + 2] = binaryValue;
-                }
-                
-                ctx.putImageData(imageData, 0, 0);
-                
-                var thresholdedImage = new Image();
-                thresholdedImage.src = canvas.toDataURL();
-                return thresholdedImage;
-            }
-
-            //step3: count the number to nonzero
-            function countNonzeros(image) {
-                var canvas = document.createElement('canvas');
-                var ctx = canvas.getContext('2d');
-                canvas.width = image.width;
-                canvas.height = image.height;
-                ctx.drawImage(image, 0, 0, image.width, image.height);
-                var imageData = ctx.getImageData(0, 0, image.width, image.height);
-                
-                var nonZeroCount = 0;
-                //step 4: If the count is larger than say 1% of the image size then the image should be classified as glared.
-                for (var i = 0; i < imageData.data.length; i += 4) {
-                    var binaryValue = imageData.data[i];
-                    if (binaryValue > 0) {
-                        nonZeroCount++;
-                    }
-                }
-                
-                return nonZeroCount;
+                // No glare detected
+                return false;
             }
         };
     </script>

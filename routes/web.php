@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\validationController;
 use App\Http\Controllers\glareController;
+use App\Http\Controllers\HumanDetectionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,10 +20,12 @@ use App\Http\Controllers\glareController;
 //     return view('welcome');
 // });
 
+
 Route::get('/', [validationController::class, 'showForm']);
-Route::post('/upload', [validationController::class, 'uploadImage'])->name('upload');
-Route::get('/facerecog', [validationController::class, 'facerecog']);
-Route::get('/check', [glareController::class, 'glare']);
-Route::post('/check-glare', [glareController::class, 'checkGlare'])->name('check-glare');
-Route::get('/eye-result', [glareController::class, 'eyedetection'])->name('eye-result');
+Route::post('/upload', [validationController::class, 'uploadImage'])->name('upload');;
+Route::view('/eye-detection', 'eye-detection');
+
 //Route::post('/check-glare', [gladeController::class, 'checkGlare']);
+
+Route::post('/detect-human', [HumanDetectionController::class, 'detectHuman']);
+Route::get('/uploadimage', [HumanDetectionController::class, 'showUploadForm']);
