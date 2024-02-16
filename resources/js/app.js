@@ -36,7 +36,20 @@ function ekUpload() {
             fileToUpload = f;
         }
     }
-  
+
+    function clearUploadResult() {
+    var resultBox = document.getElementById('upload-result');
+    if (resultBox) {
+        // Clear the content of the result box
+        resultBox.innerHTML = '';
+
+        // Hide the result box
+        resultBox.classList.add('hidden');
+    } else {
+        console.error("Element with ID 'upload-result' not found.");
+    }
+}
+
     function uploadFile() {
         var xhr = new XMLHttpRequest(),
             formData = new FormData();
@@ -44,6 +57,7 @@ function ekUpload() {
             console.error('No file to upload.');
             return;
         }
+        //clearUploadResult();
         // Append the file to the FormData object
         formData.append('fileUpload', fileToUpload);
   
@@ -62,8 +76,8 @@ function ekUpload() {
           if (xhr.status === 200) {
               var response = JSON.parse(xhr.responseText);
               console.log(response);
-              
-              if (response.success) {
+    
+              if (response.success) {            
                 var blueBackgroundMessage = response.isBlueBackground ? 'Yes' : 'No';
                 var humanMessage = response.isHuman ? 'Yes' : 'No';
                 var faceMessage = ''; 
@@ -71,14 +85,14 @@ function ekUpload() {
                 var glareMessage = '';
 
                 setupFaceAndEyeDetection(document.getElementById('file-image'), function (result) {
-                    var faceMessage = result.faceDetected ? 'Yes' : 'No';
-                    var eyeMessage = result.eyeDetected ? 'Yes' : 'No';
-                    var glareMessage = result.glareDetected ? 'Yes' : 'No';
+                    faceMessage = result.faceDetected ? 'Yes' : 'No';
+                    eyeMessage = result.eyeDetected ? 'Yes' : 'No';
+                    glareMessage = result.glareDetected ? 'Yes' : 'No';
                     
                     // Update the text content of the result elements
-                    document.getElementById('face-result').textContent = faceMessage;
-                    document.getElementById('eye-result').textContent = eyeMessage;
-                    document.getElementById('glare-result').textContent = glareMessage;
+                    // document.getElementById('face-result').textContent = faceMessage;
+                    // document.getElementById('eye-result').textContent = eyeMessage;
+                    // document.getElementById('glare-result').textContent = glareMessage;
                 
                     // Concatenate all messages together
                     var message = 'Blue Background: ' + blueBackgroundMessage + '<br>' +
@@ -107,9 +121,11 @@ function ekUpload() {
                     var uploadResultSection = document.getElementById('upload-result-section');
                     uploadResultSection.classList.remove('hidden');
                 });
+                
               } else {
                   displayUploadResult(response.message, 'error');
               }
+              
           } else {
               console.error('File upload failed. Status:', xhr.status);
           }
@@ -224,9 +240,9 @@ function ekUpload() {
         } else {
             //displayDetectionMessage('Face Detection', 'No');
         }
-    });
+      });
 
-    eyeTracker.on('track', function(event) {
+      eyeTracker.on('track', function(event) {
         event.data.forEach(function(eyeRect) {
             if (faceDetected) {
                 // Draw eyes only if a face is detected
@@ -247,30 +263,7 @@ function ekUpload() {
             eyeDetected: eyeDetected,
             glareDetected: glareDetected
         });        
-    });
-
-    function displayDetectionMessage(detectionType, detectionResult, additionalInfo = '') {
-        var messageBox = document.getElementById('upload-result');
-        var message = detectionType + ': ' + detectionResult;
-        if (additionalInfo !== '') {
-            message += '<br>' + additionalInfo;
-        }
-    
-        // Check if the message box is currently hidden
-        var isMessageBoxHidden = messageBox.classList.contains('hidden');
-    
-        // Create a new div element to contain the message
-        var messageDiv = document.createElement('div');
-        messageDiv.innerHTML = message;
-    
-        // Append the new message div to the existing content of the message box
-        messageBox.appendChild(messageDiv);
-        
-        // If the message box was hidden, display it now
-        if (isMessageBoxHidden) {
-            messageBox.classList.remove('hidden');
-        }
-    }
+      });
     
       window.plot = function(x, y, w, h, type) {
         var rect = document.createElement('div');

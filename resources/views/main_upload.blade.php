@@ -42,11 +42,6 @@
             <div class="col-md-6 mx-auto">
                 <h3>Upload Result</h3>
                 <div id="upload-result">
-                    <p>Blue Background: <span id="blue-background-result">{{ $isBlueBackground ? 'Yes' : 'No' }}</span></p>
-                    <p>Human Detected: <span id="human-result">{{ $isHuman ? 'Yes' : 'No' }}</span></p>
-                    <p>Face Detected: <span id="face-result"></span></p>
-                    <p>Eyes Detected: <span id="eye-result"></span></p>
-                    <p>Glare Detected: <span id="glare-result"></span></p>
                 </div>
             </div>
         </div>
@@ -157,6 +152,7 @@
               }
           }
           // No glare detected
+          //document.getElementById('file-image').value='';
           return false;
       }
     })
