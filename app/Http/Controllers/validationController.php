@@ -29,10 +29,33 @@ class validationController extends Controller
         // Get the most dominant color in the limited colors image
         $dominantColor = $limitedColorsImage->pickColor(0, 0, 'array');
 
+        // Adjust threshold dynamically based on brightness
+        $adjustedThreshold = $this->calculateAdjustedThreshold($dominantColor, $threshold);
+
         // Check if the color is not blue or near blue
-        $isBlue = $this->isBlueColor($dominantColor, $threshold);
+        $isBlue = $this->isBlueColor($dominantColor, $adjustedThreshold);
 
         return $isBlue;
+    }
+
+    public function calculateAdjustedThreshold($color, $baseThreshold = 200)
+    {
+        // Extract individual RGB components
+        $red = $color[0];
+        $green = $color[1];
+        $blue = $color[2];
+
+        // Calculate brightness of the color
+        $brightness = ($red + $green + $blue) / 3;
+
+        // Adjust threshold based on brightness
+        // You can adjust these coefficients as needed
+        $adjustedThreshold = $baseThreshold + ($brightness - 65) * 0.5;
+
+        // Ensure threshold is within reasonable range
+        $adjustedThreshold = min(max($adjustedThreshold, 0), 255);
+
+        return $adjustedThreshold;
     }
 
     public function isBlueColor($color, $threshold = 200)
@@ -48,6 +71,7 @@ class validationController extends Controller
         // Check if the distance is below the threshold
         return $distance < $threshold;
     }
+
 
     public function uploadImage(Request $request)
     {
