@@ -13,6 +13,32 @@ class validationController extends Controller
         return view('main_upload', compact('isBlueBackground', 'isHuman'));
     }
 
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'fileUpload' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $image = $request->file('fileUpload');
+        $imagePath = $image->path();
+
+        // Save the uploaded image temporarily
+        $path = $image->storeAs('temp', $image->getClientOriginalName());
+
+        // Check background color before proceeding with upload
+        $isBlueBackground = $this->checkBackgroundColor($imagePath);
+        $isHuman = $this->detectHuman($path);
+        $isGlare = $this->detectGlare($imagePath);
+
+        // Combine all results into the response JSON
+        return response()->json([
+            'success' => true,
+            'isBlueBackground' => $isBlueBackground,
+            'isHuman' => $isHuman,
+            'isGlare' => $isGlare
+        ]);
+    }
+
     public function checkBackgroundColor($imagePath, $threshold = 200)
     {
         // Open an image file
@@ -72,31 +98,6 @@ class validationController extends Controller
         return $distance < $threshold;
     }
 
-
-    public function uploadImage(Request $request)
-    {
-        $request->validate([
-            'fileUpload' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $image = $request->file('fileUpload');
-        $imagePath = $image->path();
-
-        // Save the uploaded image temporarily
-        $path = $image->storeAs('temp', $image->getClientOriginalName());
-
-        // Check background color before proceeding with upload
-        $isBlueBackground = $this->checkBackgroundColor($imagePath);
-        $isHuman = $this->detectHuman($path);
-
-        // Combine all results into the response JSON
-        return response()->json([
-            'success' => true,
-            'isBlueBackground' => $isBlueBackground,
-            'isHuman' => $isHuman
-        ]);
-    }
-
     public function detectHuman($imagePath)
     {
         $command = "python " . base_path("face_detection_script.py") . " " . storage_path("app/$imagePath");
@@ -116,4 +117,25 @@ class validationController extends Controller
             return false;
         }
     }
+    
+    public function detectGlare($imagePath)
+    {
+        $command = "python " . base_path("glare_script.py") . " " . storage_path("app/$imagePath");
+
+        // Execute the command
+        exec($command, $output, $returnCode);
+
+        // Check if the command executed successfully
+        if ($returnCode === 0) {
+            // Extract the result from the output
+            $result = trim(implode("\n", $output));
+            // Convert the result to a boolean value
+            $isGlare = filter_var($result, FILTER_VALIDATE_BOOLEAN);
+
+            return $isGlare;
+        } else {
+            return false;
+        }
+    }
+    
 }

@@ -83,11 +83,13 @@ function ekUpload() {
                 var faceMessage = ''; 
                 var eyeMessage = '';
                 var glareMessage = '';
+                var multipleFaces = '';
 
                 setupFaceAndEyeDetection(document.getElementById('file-image'), function (result) {
                     faceMessage = result.faceDetected ? 'Yes' : 'No';
                     eyeMessage = result.eyeDetected ? 'Yes' : 'No';
                     glareMessage = result.glareDetected ? 'Yes' : 'No';
+                    multipleFaces = result.multipleFaces ? 'Yes' : 'No';
                     
                     // Update the text content of the result elements
                     // document.getElementById('face-result').textContent = faceMessage;
@@ -99,7 +101,8 @@ function ekUpload() {
                         'Human Detected: ' + humanMessage + '<br>' +
                         'Face Detected: ' + faceMessage + '<br>' +
                         'Eyes Detected: ' + eyeMessage + '<br>' +
-                        'Glare Detected: ' + glareMessage;
+                        'Glare Detected: ' + glareMessage + '<br>' +
+                        'Multiple Face Detected: ' + multipleFaces;
                 
                     // Display the upload result
                     displayUploadResult(message, 'success');
@@ -113,7 +116,7 @@ function ekUpload() {
                     }
                 
                     // Show alert based on detection results
-                    if (response.isBlueBackground && response.isHuman) {
+                    if (response.isBlueBackground && response.isHuman && !result.glareDetected && !result.multipleFaces) {
                         showAlert('Image uploaded successfully!', 'success');
                     } else {
                         showAlert('Image cannot be uploaded. Requirements not fulfilled.', 'error');
@@ -211,6 +214,7 @@ function ekUpload() {
       var eyeDetected = false; // Flag to track if an eye is detected
       var eyePositions = []; // Array to store eye positions
       var glareDetected = false; // Flag to track glare detection
+      var multipleFaces = false;
   
       //0.9, 1.0, 0.2 @ 1.0, 1.0, 0.2
       var faceTracker = new tracking.ObjectTracker('face');
@@ -226,20 +230,24 @@ function ekUpload() {
       tracking.track('#file-image', faceTracker);
       tracking.track('#file-image', eyeTracker);
   
-      var faceDetected = false; // Flag to track if a face is detected
-  
       faceTracker.on('track', function(event) {
-        if (event.data.length > 0) {
-            // Face detected
-            faceDetected = true;
-            var faceRect = event.data[0];
-            var faceMessage = 'Face Detected at: ' + faceRect.x + ' ' + faceRect.y;
-            //console.log('Detected face at:', faceRect.x, faceRect.y);
-            window.plot(faceRect.x, faceRect.y, faceRect.width, faceRect.height, 'face');
-            //displayDetectionMessage('Face Detection', 'Yes', faceMessage);
-        } else {
-            //displayDetectionMessage('Face Detection', 'No');
-        }
+        event.data.forEach(function(faceRect) {
+            if (event.data.length == 1) {
+                // Face detected
+                faceDetected = true;
+                var faceRect = event.data[0];
+                //var faceMessage = 'Face Detected at: ' + faceRect.x + ' ' + faceRect.y;
+                //console.log('Detected face at:', faceRect.x, faceRect.y);
+                window.plot(faceRect.x, faceRect.y, faceRect.width, faceRect.height, 'face');
+                //displayDetectionMessage('Face Detection', 'Yes', faceMessage);
+            } else  {
+                //displayDetectionMessage('Face Detection', 'No');
+                multipleFaces = true;
+                faceDetected = true;
+                //console.log('Detected face at:', faceRect.x, faceRect.y);
+                window.plot(faceRect.x, faceRect.y, faceRect.width, faceRect.height, 'face');   
+            }
+        });
       });
 
       eyeTracker.on('track', function(event) {
@@ -253,17 +261,21 @@ function ekUpload() {
                 // Check for glare in the eye region (example algorithm)
                 var intensityThreshold = 100; // Adjust as needed
                 var redChannelThreshold = 200; // Adjust as needed
-                var brightnessThreshold = 130; // Adjust as needed
-                var glareDetected = detectGlare(img, eyeRect, brightnessThreshold);                
-            }
-            
+                var brightnessThreshold =  300; // Adjust as needed
+                var isGlare = detectGlare(img, eyeRect, brightnessThreshold); 
+                console.log(isGlare);              
+                if (isGlare){
+                    glareDetected = true;
+                }
+            } 
         });
         callback({
             faceDetected: faceDetected,
             eyeDetected: eyeDetected,
-            glareDetected: glareDetected
+            glareDetected: glareDetected,
+            multipleFaces: multipleFaces
         });        
-      });
+      });   
     
       window.plot = function(x, y, w, h, type) {
         var rect = document.createElement('div');
