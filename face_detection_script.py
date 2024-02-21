@@ -1,5 +1,6 @@
 import cv2
 import sys
+import os
 
 # Function to check the human face in the picture
 def is_human_opencv(image_path):
@@ -21,7 +22,12 @@ def is_human_opencv(image_path):
 # Examples of use
 if __name__ == "__main__":
     # Get the image path from the command line arguments
-    image_path = sys.argv[1]
+    image_path = ' '.join(sys.argv[1:])
+
+    "Ensure the image path exists"
+    if not os.path.exists(image_path):
+        print("Error: The specified image path does not exist.")
+        sys.exit(1)
 
     result = is_human_opencv(image_path)
 
