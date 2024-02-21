@@ -255,7 +255,7 @@ function ekUpload() {
             if (faceDetected) {
                 // Draw eyes only if a face is detected
                 eyeDetected = true;
-                //console.log('Detected eye at:', eyeRect.x, eyeRect.y);
+                console.log('Detected eye at:', eyeRect.x, eyeRect.y);
                 window.plot(eyeRect.x, eyeRect.y, eyeRect.width, eyeRect.height, 'eye');
                 eyePositions.push(eyeRect.x + ' ' + eyeRect.y);
                 // Check for glare in the eye region (example algorithm)
