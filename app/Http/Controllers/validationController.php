@@ -38,6 +38,8 @@ class validationController extends Controller
         $faceDetected = $detectionResults['face_detected'];
         $multipleFacesDetected = $detectionResults['multiple_faces_detected'];
 
+        $isBlurry = $this->detectBlur($path);
+        
         // Return the results in the response JSON 
         return response()->json([
             'success' => true,
@@ -47,7 +49,8 @@ class validationController extends Controller
             'rightEyeDetected' => $rightEyeDetected,
             'faceDetected' => $faceDetected,
             'landmarks' => $landmarks,
-            'multipleFacesDetected' => $multipleFacesDetected
+            'multipleFacesDetected' => $multipleFacesDetected,
+            'isBlurry' => $isBlurry
         ]);
     }
 
@@ -129,7 +132,28 @@ class validationController extends Controller
             return false;
         }
     }
-    
+
+    public function detectBlur($imagePath)
+    {
+        $command = "python " . base_path("blurry_detection.py") . " -i " . storage_path("app/$imagePath");
+
+        // Execute the command
+        exec($command, $output, $returnCode);
+
+        // Check if the command executed successfully
+        if ($returnCode === 0) {
+            // Extract the result from the output
+            $result = trim(implode("\n", $output));
+            
+            // Convert the result to a boolean value
+            $isBlurry = strtolower($result) === 'true';
+
+            return $isBlurry;
+        } else {
+            return false;
+        }
+    }
+
     public function detectGlare($imagePath)
     {
         $command = "python " . base_path("glare_script.py") . " " . storage_path("app/$imagePath");
@@ -159,6 +183,4 @@ class validationController extends Controller
             return false;
         }
     }
-
-    
 }

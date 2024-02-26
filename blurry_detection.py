@@ -1,5 +1,7 @@
 import cv2
 import argparse
+import os
+import sys
 
 def detect_blur(image_path, threshold):
     # Read the image
@@ -15,25 +17,30 @@ def detect_blur(image_path, threshold):
     laplacian_variance = laplacian.var()
 
     # Initialize result variable
-    blur_text = "Not Blurry"
+    is_blurry = laplacian_variance < threshold
 
-    # Check blur condition based on variance of Laplacian image
-    if laplacian_variance < threshold:
-        blur_text = "Blurry"
-
-    # Print result
-    print("Image:", image_path)
-    print("Blur status:", blur_text)
+    return is_blurry
 
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", required=True, help="input image file path")
+    parser.add_argument("-i", nargs='+', required=True, help="input image file path")
     parser.add_argument("-t", type=float, default=250.0, help="blur threshold")
     args = parser.parse_args()
 
+    # Construct the image path by joining the arguments
+    image_path = ' '.join(args.i)
+
+    # Ensure the image path exists
+    if not os.path.exists(image_path):
+        print("Error: The specified image path does not exist.")
+        sys.exit(1)
+
     # Process the specified image
-    detect_blur(args.i, args.t)
+    is_blurry = detect_blur(image_path, args.t)
+
+    # Modify the return value to suit your needs (e.g., print as JSON)
+    print(is_blurry)
 
 if __name__ == "__main__":
     main()

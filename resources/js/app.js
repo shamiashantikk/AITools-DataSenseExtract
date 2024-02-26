@@ -84,12 +84,8 @@ function ekUpload() {
                 var rightEyeMessage = response.rightEyeDetected ? 'Yes' : 'No';
                 var faceMessage = response.faceDetected ? 'Yes' : 'No';
                 var multipleFacesMessage = response.multipleFacesDetected ? 'Yes' : 'No';
-                // return response()->json([
-                //     'leftEyeDetected' => $leftEyeDetected,
-                //     'rightEyeDetected' => $rightEyeDetected,
-                //     'faceDetected' => $faceDetected,
-                //     'landmarks' => $landmarks
-                // ]);
+                var blurryMessage = response.isBlurry? 'Yes' : 'No';
+                
                 // var faceMessage = ''; 
                 // var eyeMessage = '';
                 var glareMessage = 'belum lagi :)';
@@ -113,7 +109,8 @@ function ekUpload() {
                         'Left Eye Detected: ' + leftEyeMessage + '<br>' +
                         'Right Eye Detected: ' + rightEyeMessage + '<br>' +
                         'Glare Detected: ' + glareMessage + '<br>' +
-                        'Multiple Face Detected: ' + multipleFacesMessage;
+                        'Multiple Face Detected: ' + multipleFacesMessage + '<br>' +
+                        'Blurry Image: ' + blurryMessage;
                 
                     // Display the upload result
                     displayUploadResult(message, 'success');
