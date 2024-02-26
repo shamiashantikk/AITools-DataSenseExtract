@@ -80,16 +80,26 @@ function ekUpload() {
               if (response.success) {            
                 var blueBackgroundMessage = response.isBlueBackground ? 'Yes' : 'No';
                 var humanMessage = response.isHuman ? 'Yes' : 'No';
-                var faceMessage = ''; 
-                var eyeMessage = '';
-                var glareMessage = '';
-                var multipleFaces = '';
+                var leftEyeMessage = response.leftEyeDetected ? 'Yes' : 'No';
+                var rightEyeMessage = response.rightEyeDetected ? 'Yes' : 'No';
+                var faceMessage = response.faceDetected ? 'Yes' : 'No';
+                var multipleFacesMessage = response.multipleFacesDetected ? 'Yes' : 'No';
+                // return response()->json([
+                //     'leftEyeDetected' => $leftEyeDetected,
+                //     'rightEyeDetected' => $rightEyeDetected,
+                //     'faceDetected' => $faceDetected,
+                //     'landmarks' => $landmarks
+                // ]);
+                // var faceMessage = ''; 
+                // var eyeMessage = '';
+                var glareMessage = 'belum lagi :)';
+                //  var multipleFaces = '';
 
-                setupFaceAndEyeDetection(document.getElementById('file-image'), function (result) {
-                    faceMessage = result.faceDetected ? 'Yes' : 'No';
-                    eyeMessage = result.eyeDetected ? 'Yes' : 'No';
-                    glareMessage = result.glareDetected ? 'Yes' : 'No';
-                    multipleFaces = result.multipleFaces ? 'Yes' : 'No';
+                //setupFaceAndEyeDetection(document.getElementById('file-image'), function (result) {
+                    // faceMessage = result.faceDetected ? 'Yes' : 'No';
+                    // eyeMessage = result.eyeDetected ? 'Yes' : 'No';
+                    //glareMessage = result.glareDetected ? 'Yes' : 'No';
+                    //multipleFaces = result.multipleFaces ? 'Yes' : 'No';
                     
                     // Update the text content of the result elements
                     // document.getElementById('face-result').textContent = faceMessage;
@@ -100,36 +110,38 @@ function ekUpload() {
                     var message = 'Blue Background: ' + blueBackgroundMessage + '<br>' +
                         'Human Detected: ' + humanMessage + '<br>' +
                         'Face Detected: ' + faceMessage + '<br>' +
-                        'Eyes Detected: ' + eyeMessage + '<br>' +
+                        'Left Eye Detected: ' + leftEyeMessage + '<br>' +
+                        'Right Eye Detected: ' + rightEyeMessage + '<br>' +
                         'Glare Detected: ' + glareMessage + '<br>' +
-                        'Multiple Face Detected: ' + multipleFaces;
+                        'Multiple Face Detected: ' + multipleFacesMessage;
                 
                     // Display the upload result
                     displayUploadResult(message, 'success');
                 
                     // Show or hide the upload result section based on detection results
-                    var uploadResultSection = document.getElementById('upload-result-section');
-                    if (result.faceDetected && result.eyeDetected && !result.glareDetected) {
-                        uploadResultSection.classList.remove('hidden');
-                    } else {
-                        uploadResultSection.classList.add('hidden');
-                    }
+                    // var uploadResultSection = document.getElementById('upload-result-section');
+                    // if (!result.glareDetected) {
+                    //     uploadResultSection.classList.remove('hidden');
+                    // } else {
+                    //     uploadResultSection.classList.add('hidden');
+                    // }
                 
                     // Show alert based on detection results
-                    if (response.isBlueBackground && response.isHuman && !result.glareDetected && !result.multipleFaces) {
+                    if (response.isBlueBackground && response.isHuman && response.faceDetected && !response.multipleFaces) {
                         showAlert('Image uploaded successfully!', 'success');
                     } else {
                         showAlert('Image cannot be uploaded. Requirements not fulfilled.', 'error');
                     }
                     var uploadResultSection = document.getElementById('upload-result-section');
                     uploadResultSection.classList.remove('hidden');
-                });
+                //});
                 
               } else {
                   displayUploadResult(response.message, 'error');
               }
               
           } else {
+            //displayUploadResult(response.message, 'error');
               console.error('File upload failed. Status:', xhr.status);
           }
         };
@@ -269,7 +281,7 @@ function ekUpload() {
                 }
             } 
         });
-        callback({
+        callback({  
             faceDetected: faceDetected,
             eyeDetected: eyeDetected,
             glareDetected: glareDetected,

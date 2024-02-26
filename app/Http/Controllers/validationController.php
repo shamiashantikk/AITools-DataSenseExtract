@@ -28,14 +28,26 @@ class validationController extends Controller
         // Check background color before proceeding with upload
         $isBlueBackground = $this->checkBackgroundColor($imagePath);
         $isHuman = $this->detectHuman($path);
-        $isGlare = $this->detectGlare($imagePath);
 
-        // Combine all results into the response JSON
+        // Detect human and retrieve detection results
+        $detectionResults = $this->detectGlare($path); 
+        $landmarks = $detectionResults['landmarks'];
+        $leftEyeDetected = $detectionResults['left_eye_detected'];
+        //var_dump($leftEyeDetected);
+        $rightEyeDetected = $detectionResults['right_eye_detected'];
+        $faceDetected = $detectionResults['face_detected'];
+        $multipleFacesDetected = $detectionResults['multiple_faces_detected'];
+
+        // Return the results in the response JSON 
         return response()->json([
             'success' => true,
             'isBlueBackground' => $isBlueBackground,
             'isHuman' => $isHuman,
-            'isGlare' => $isGlare
+            'leftEyeDetected' => $leftEyeDetected,
+            'rightEyeDetected' => $rightEyeDetected,
+            'faceDetected' => $faceDetected,
+            'landmarks' => $landmarks,
+            'multipleFacesDetected' => $multipleFacesDetected
         ]);
     }
 
@@ -127,15 +139,26 @@ class validationController extends Controller
 
         // Check if the command executed successfully
         if ($returnCode === 0) {
-            // Extract the result from the output
-            $result = trim(implode("\n", $output));
-            // Convert the result to a boolean value
-            $isGlare = filter_var($result, FILTER_VALIDATE_BOOLEAN);
+            // Parse the output JSON string
+            $result = json_decode($output[0], true);
 
-            return $isGlare;
+            // Extract individual results
+            $faceDetected = $result['face_detected'];
+            $multipleFacesDetected = $result['multiple_faces_detected'];
+            $leftEyeDetected = $result['left_eye_detected'];
+            $rightEyeDetected = $result['right_eye_detected'];
+            $landmarks = $result['landmarks'];
+            return [
+                'face_detected' => $faceDetected,
+                'multiple_faces_detected' => $multipleFacesDetected,
+                'left_eye_detected' => $leftEyeDetected,
+                'right_eye_detected' => $rightEyeDetected,
+                'landmarks' => $landmarks
+            ];
         } else {
             return false;
         }
     }
+
     
 }
