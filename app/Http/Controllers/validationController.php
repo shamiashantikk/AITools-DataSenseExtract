@@ -91,7 +91,7 @@ class validationController extends Controller
 
         // Adjust threshold based on brightness
         // You can adjust these coefficients as needed
-        $adjustedThreshold = $baseThreshold + ($brightness - 65) * 0.5;
+        $adjustedThreshold = $baseThreshold + ($brightness - 85) * 0.5;
 
         // Ensure threshold is within reasonable range
         $adjustedThreshold = min(max($adjustedThreshold, 0), 255);
